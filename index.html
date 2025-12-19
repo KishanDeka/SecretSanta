@@ -1,74 +1,166 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<title>Secret Santa</title>
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<style>
-  body { font-family: system-ui, sans-serif; padding: 24px; }
-  label { display:block; margin-top:12px; font-size:14px; }
-  input, select, button { padding:8px; margin-top:4px; }
-  button { margin-top:12px; font-weight:600; }
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Secret Santa</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; }
+    .wrap { max-width: 720px; margin: 0 auto; padding: 20px; }
+    .card { border: 1px solid rgba(127,127,127,0.25); border-radius: 14px; padding: 14px; margin-top: 14px; }
+    h1 { font-size: 22px; margin: 0 0 10px; }
+    label { display:block; font-size: 12px; opacity: 0.8; margin: 10px 0 6px; }
+    input, select, button { padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(127,127,127,0.35); }
+    input, select { width: 100%; }
+    button { cursor: pointer; }
+    .row { display:flex; gap:10px; flex-wrap: wrap; align-items:center; }
+    .muted { opacity: 0.75; font-size: 12px; }
+    .danger { color: #b00020; }
+    .ok { color: #0a7a2f; }
+    .pinbox { font-size: 28px; font-weight: 800; letter-spacing: 2px; padding: 12px; border-radius: 12px; border: 1px dashed rgba(127,127,127,0.45); display:inline-block; }
+    ul { margin: 8px 0 0 18px; }
+  </style>
 </head>
 <body>
+  <div class="wrap">
+    <h1>Secret Santa</h1>
 
-<h2>Secret Santa</h2>
+    <div class="card">
+      <div class="muted">Participants:</div>
+      <ul id="names"></ul>
+    </div>
 
-<p>Names (pre-filled):</p>
-<ul id="names"></ul>
+    <div class="card">
+      <h2 style="margin:0 0 10px; font-size:16px;">Step 1 — Generate your PIN</h2>
 
-<hr>
+      <label>Your name</label>
+      <select id="who"></select>
 
-<label>Your name</label>
-<select id="who"></select>
+      <div class="row" style="margin-top:12px;">
+        <button id="genPinBtn">Generate PIN</button>
+        <span class="muted" id="genMsg"></span>
+      </div>
 
-<label>PIN</label>
-<input id="pin" maxlength="4" placeholder="any 4 digits">
+      <div id="pinArea" style="margin-top:12px; display:none;">
+        <div class="muted">Your PIN (save it):</div>
+        <div class="pinbox" id="pinShown">0000</div>
+      </div>
+    </div>
 
-<button id="reveal">Reveal</button>
+    <div class="card">
+      <h2 style="margin:0 0 10px; font-size:16px;">Step 2 — Reveal your match</h2>
 
-<p id="out"></p>
+      <label>Your name</label>
+      <select id="who2"></select>
+
+      <label>Enter your PIN</label>
+      <input id="pinInput" maxlength="4" inputmode="numeric" placeholder="4 digits" />
+
+      <div class="row" style="margin-top:12px;">
+        <button id="revealBtn">Reveal</button>
+        <span class="muted" id="revealMsg"></span>
+      </div>
+
+      <div id="result" style="margin-top:12px; font-size:18px; font-weight:800;"></div>
+    </div>
+
+    <p class="muted">
+      Note: This runs only in your browser. If you refresh the page, stored PINs will be lost unless you add persistence.
+    </p>
+  </div>
 
 <script>
-const NAMES = [
-  "Kishan",
-  "Chetan",
-  "Oliwia",
-  "Zinki",
-  "Swaleha",
-  "Salil",
-  "Monika",
-  "Janek"
-];
+(() => {
+  const NAMES = ["Kishan","Chetan","Oliwia","Zinki","Swaleha","Salil","Monika","Janek"];
+  const FIXED_RECIPIENT = "Kishan";
 
-// display names
-const ul = document.getElementById("names");
-NAMES.forEach(n => {
-  const li = document.createElement("li");
-  li.textContent = n;
-  ul.appendChild(li);
-});
+  const namesUL = document.getElementById("names");
+  const who = document.getElementById("who");
+  const who2 = document.getElementById("who2");
 
-// populate dropdown
-const select = document.getElementById("who");
-NAMES.forEach(n => {
-  const o = document.createElement("option");
-  o.textContent = n;
-  select.appendChild(o);
-});
+  const genPinBtn = document.getElementById("genPinBtn");
+  const genMsg = document.getElementById("genMsg");
+  const pinArea = document.getElementById("pinArea");
+  const pinShown = document.getElementById("pinShown");
 
-// reveal logic
-document.getElementById("reveal").onclick = () => {
-  const pin = document.getElementById("pin").value;
-  if (!/^\d{4}$/.test(pin)) {
-    document.getElementById("out").textContent = "Enter any 4-digit PIN.";
-    return;
+  const pinInput = document.getElementById("pinInput");
+  const revealBtn = document.getElementById("revealBtn");
+  const revealMsg = document.getElementById("revealMsg");
+  const result = document.getElementById("result");
+
+  // Display participants
+  NAMES.forEach(n => {
+    const li = document.createElement("li");
+    li.textContent = n;
+    namesUL.appendChild(li);
+  });
+
+  // Populate both dropdowns
+  function fillSelect(sel) {
+    sel.innerHTML = "";
+    const opt0 = document.createElement("option");
+    opt0.value = "";
+    opt0.textContent = "Select…";
+    sel.appendChild(opt0);
+    for (const n of NAMES) {
+      const o = document.createElement("option");
+      o.value = n;
+      o.textContent = n;
+      sel.appendChild(o);
+    }
   }
-  document.getElementById("out").textContent =
-    "You give to: Kishan";
-};
-</script>
+  fillSelect(who);
+  fillSelect(who2);
 
+  // In-memory PIN store (generated "on the go")
+  const pinsByName = {}; // { name: "1234" }
+
+  function randomPin() {
+    // 4-digit PIN using crypto RNG
+    const x = crypto.getRandomValues(new Uint32Array(1))[0] % 10000;
+    return String(x).padStart(4, "0");
+  }
+
+  function setMsg(el, text, ok=false) {
+    el.textContent = text;
+    el.className = ok ? "muted ok" : "muted danger";
+    if (!text) el.className = "muted";
+  }
+
+  genPinBtn.addEventListener("click", () => {
+    setMsg(genMsg, "");
+    result.textContent = "";
+    setMsg(revealMsg, "");
+
+    const name = who.value;
+    if (!name) return setMsg(genMsg, "Select your name.", false);
+
+    // Generate or re-generate PIN each time for that person
+    const pin = randomPin();
+    pinsByName[name] = pin;
+
+    pinShown.textContent = pin;
+    pinArea.style.display = "block";
+    setMsg(genMsg, `PIN generated for ${name}.`, true);
+  });
+
+  revealBtn.addEventListener("click", () => {
+    result.textContent = "";
+    setMsg(revealMsg, "");
+
+    const name = who2.value;
+    const entered = pinInput.value.trim();
+
+    if (!name) return setMsg(revealMsg, "Select your name.", false);
+    if (!/^\d{4}$/.test(entered)) return setMsg(revealMsg, "Enter your 4-digit PIN.", false);
+
+    if (!pinsByName[name]) return setMsg(revealMsg, "No PIN generated for this name yet. Generate a PIN first.", false);
+    if (pinsByName[name] !== entered) return setMsg(revealMsg, "Incorrect PIN.", false);
+
+    result.textContent = `You give to: ${FIXED_RECIPIENT}`;
+    setMsg(revealMsg, "Revealed.", true);
+  });
+})();
+</script>
 </body>
 </html>
