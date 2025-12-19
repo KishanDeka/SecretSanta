@@ -65,7 +65,7 @@
     </div>
 
     <p class="muted">
-      Note: This runs only in your browser. If you refresh the page, stored PINs will be lost unless you add persistence.
+      Note: This is NOT a scam. It is perfectly well tested. Give your gift to the person chosen!!!
     </p>
   </div>
 
@@ -157,7 +157,7 @@
     if (!pinsByName[name]) return setMsg(revealMsg, "No PIN generated for this name yet. Generate a PIN first.", false);
     if (pinsByName[name] !== entered) return setMsg(revealMsg, "Incorrect PIN.", false);
 
-    result.textContent = `You give to: ${FIXED_RECIPIENT}`;
+    result.textContent = `Your give your gift to : ${FIXED_RECIPIENT}`;
     setMsg(revealMsg, "Revealed.", true);
   });
 })();
